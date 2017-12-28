@@ -30414,7 +30414,7 @@ var App = function (_PureComponent) {
             var _this2 = this;
 
             var name = 'React Repeatable';
-            var url = 'https://github.com/trendmicro-frontend/react-repeatable';
+            var url = 'https://github.com/cheton/react-repeatable';
 
             return _react2.default.createElement(
                 'div',
@@ -30525,4 +30525,4 @@ _reactDom2.default.render(_react2.default.createElement(App, null), document.get
 /***/ })
 
 /******/ });
-//# sourceMappingURL=bundle.js.map?2d3bc31f4b7575179b68
+//# sourceMappingURL=bundle.js.map?b7072ed60c2cd79b3ec4

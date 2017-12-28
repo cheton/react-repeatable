@@ -73,7 +73,7 @@ class App extends PureComponent {
 
     render() {
         const name = 'React Repeatable';
-        const url = 'https://github.com/trendmicro-frontend/react-repeatable';
+        const url = 'https://github.com/cheton/react-repeatable';
 
         return (
             <div>
