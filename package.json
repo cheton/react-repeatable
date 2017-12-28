@@ -1,0 +1,86 @@
+{
+  "name": "react-repeatable",
+  "version": "0.1.0",
+  "description": "A press and hold wrapper component that can trigger action multiple times while holding down a clickable element.",
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "prepublish": "npm run eslint && npm test && npm run clean && npm run build && npm run build-examples",
+    "build": "babel --out-dir ./lib ./src",
+    "build-examples": "cd examples; webpack",
+    "clean": "rm -f lib/*",
+    "demo": "http-server -p 8000 docs/",
+    "eslint": "eslint --ext .js --ext .jsx *.js examples src test",
+    "test": "tap test/*.js --node-arg=--require --node-arg=babel-register --node-arg=--require --node-arg=babel-polyfill",
+    "coveralls": "tap test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls",
+    "dev": "cd examples; webpack-dev-server --hot --inline --host 0.0.0.0 --port 8000 --content-base ../docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trendmicro-frontend/react-repeatable.git"
+  },
+  "author": "Cheton Wu <cheton@gmail.com>",
+  "contributors": [
+    {
+      "name": "Cheton Wu",
+      "email": "cheton@gmail.com",
+      "url": "https://github.com/trendmicro-frontend"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trendmicro-frontend/react-repeatable/issues"
+  },
+  "homepage": "https://github.com/trendmicro-frontend/react-repeatable",
+  "keywords": [
+    "react",
+    "react-repeatable"
+  ],
+  "peerDependencies": {
+    "react": "^0.14.0 || >=15.0.0"
+  },
+  "dependencies": {
+    "prop-types": "^15.6.0"
+  },
+  "devDependencies": {
+    "@trendmicro/react-anchor": "~0.5.6",
+    "@trendmicro/react-buttons": "~1.2.1",
+    "babel-cli": "~6.26.0",
+    "babel-core": "~6.26.0",
+    "babel-eslint": "~8.1.2",
+    "babel-loader": "~7.1.2",
+    "babel-plugin-transform-decorators-legacy": "~1.3.4",
+    "babel-preset-env": "~1.6.1",
+    "babel-preset-react": "~6.24.1",
+    "babel-preset-stage-0": "~6.24.1",
+    "coveralls": "~3.0.0",
+    "css-loader": "~0.28.7",
+    "enzyme": "~3.2.0",
+    "enzyme-adapter-react-16": "~1.1.1",
+    "eslint": "~4.14.0",
+    "eslint-config-trendmicro": "~1.3.0",
+    "eslint-loader": "~1.9.0",
+    "eslint-plugin-import": "~2.8.0",
+    "eslint-plugin-jsx-a11y": "~6.0.3",
+    "eslint-plugin-react": "~7.5.1",
+    "file-loader": "~1.1.6",
+    "html-webpack-plugin": "~2.30.1",
+    "http-server": "~0.10.0",
+    "jsdom": "~11.5.1",
+    "nib": "~1.1.2",
+    "rc-slider": "~8.5.0",
+    "react": "~16.2.0",
+    "react-dom": "~16.2.0",
+    "style-loader": "~0.19.1",
+    "stylint": "~1.5.9",
+    "stylint-loader": "~1.0.0",
+    "stylus-loader": "~3.0.1",
+    "tap": "~11.0.1",
+    "trendmicro-ui": "~0.5.1",
+    "url-loader": "~0.6.2",
+    "webpack": "~3.10.0",
+    "webpack-dev-server": "~2.9.7"
+  }
+}
