@@ -36,7 +36,11 @@
   "homepage": "https://github.com/trendmicro-frontend/react-repeatable",
   "keywords": [
     "react",
-    "react-repeatable"
+    "repeatable",
+    "press",
+    "hold",
+    "release",
+    "click"
   ],
   "peerDependencies": {
     "react": "^0.14.0 || >=15.0.0"
