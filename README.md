@@ -16,8 +16,8 @@ npm install --save react-repeatable
 
 ```js
 <Repeatable
-    enterDelay="500"
-    intervalDelay="50"
+    enterDelay={500}
+    intervalDelay={50}
     onPress{(event) => {
         // Callback fired when the mousedown or touchstart event is triggered.
     }}
@@ -28,7 +28,7 @@ npm install --save react-repeatable
     <button
         type="button"
         onClick={(event) => {
-            // The action will be triggered multiple times.
+            // The click action will be triggered multiple times.
         }}
     >
         Press Me
