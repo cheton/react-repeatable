@@ -19,21 +19,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trendmicro-frontend/react-repeatable.git"
+    "url": "git+https://github.com/cheton/react-repeatable.git"
   },
   "author": "Cheton Wu <cheton@gmail.com>",
   "contributors": [
     {
       "name": "Cheton Wu",
       "email": "cheton@gmail.com",
-      "url": "https://github.com/trendmicro-frontend"
+      "url": "https://github.com/cheton"
     }
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/trendmicro-frontend/react-repeatable/issues"
+    "url": "https://github.com/cheton/react-repeatable/issues"
   },
-  "homepage": "https://github.com/trendmicro-frontend/react-repeatable",
+  "homepage": "https://github.com/cheton/react-repeatable",
   "keywords": [
     "react",
     "repeatable",
