@@ -1,6 +1,6 @@
 # react-repeatable [![build status](https://travis-ci.org/cheton/react-repeatable.svg?branch=master)](https://travis-ci.org/cheton/react-repeatable) [![Coverage Status](https://coveralls.io/repos/github/cheton/react-repeatable/badge.svg?branch=master)](https://coveralls.io/github/cheton/react-repeatable?branch=master)
 
-[![NPM](https://nodei.co/npm/@trendmicro/react-repeatable.png?downloads=true&stars=true)](https://nodei.co/npm/@trendmicro/react-repeatable/)
+[![NPM](https://nodei.co/npm/react-repeatable.png?downloads=true&stars=true)](https://nodei.co/npm/react-repeatable/)
 
 A press and hold wrapper component that can trigger action multiple times while holding down a clickable element.
 
