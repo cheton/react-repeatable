@@ -34,12 +34,7 @@ npm install --save react-repeatable
         // Callback fired when the mouseup, touchcancel, or touchend event is triggered.
     }}
 >
-    <button
-        type="button"
-        onClick={(event) => {
-            // The click action will be triggered multiple times.
-        }}
-    >
+    <button type="button">
         Press Me
     </button>
 </Repeatable>
@@ -55,9 +50,9 @@ repeatDelay | Number | 500 | The time (in milliseconds) to wait before the first
 repeatInterval | Number | 32 | The time interval (in milliseconds) on how often to trigger a hold action.
 repeatCount | Number | | The number of times the hold action will take place.
 onPress | Function(event) | | Callback fired when the mousedown or touchstart event is triggered.
-onHoldStart | Function() | | Callback fired once when the hold action is started.
+onHoldStart | Function() | | Callback fired once before the first hold action.
 onHold | Function() | | Callback fired mutiple times while holding down.
-onHoldEnd | Function() | | Callback fired once when the hold action has finished.
+onHoldEnd | Function() | | Callback fired once after the last hold action.
 onRelease | Function(event) | | Callback fired when the mouseup, touchcancel, or touchend event is triggered.
 
 ## License
