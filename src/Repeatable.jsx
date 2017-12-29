@@ -1,47 +1,86 @@
 import PropTypes from 'prop-types';
-import React, { cloneElement, PureComponent } from 'react';
+import React, { PureComponent } from 'react';
 
 class Repeatable extends PureComponent {
     static propTypes = {
-        // The time (in milliseconds) to wait before the action is being triggered.
-        enterDelay: PropTypes.number,
+        // The time (in milliseconds) to wait before the first hold action is being triggered.
+        repeatDelay: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.string
+        ]),
 
-        // The intervals (in milliseconds) on how often to trigger the action.
-        intervalDelay: PropTypes.number,
+        // The time interval (in milliseconds) on how often to trigger a hold action.
+        repeatInterval: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.string
+        ]),
+
+        // The number of times the hold action will take place.
+        repeatCount: PropTypes.oneOfType([
+            PropTypes.number,
+            PropTypes.string
+        ]),
 
         // Callback fired when the mousedown or touchstart event is triggered.
         onPress: PropTypes.func,
 
+        // Callback fired once before the first hold action.
+        onHoldStart: PropTypes.func,
+
+        // Callback fired mutiple times while holding down.
+        onHold: PropTypes.func,
+
+        // Callback fired once after the last hold action.
+        onHoldEnd: PropTypes.func,
+
         // Callback fired when the mouseup, touchcancel, or touchend event is triggered.
         onRelease: PropTypes.func
     };
+    static defaultProps = {
+        repeatDelay: 500,
+        repeatInterval: 32
+    };
 
-    enterTimer = null;
-    intervalTimer = null;
+    repeatDelayTimer = null;
+    repeatIntervalTimer = null;
 
-    acquireTimer = (callback, ...args) => {
-        const enterDelay = Number(this.props.enterDelay) || 500;
-        const intervalDelay = Number(this.props.intervalDelay) || 50;
+    acquireTimer = () => {
+        const repeatDelay = Math.max(Number(this.props.repeatDelay) || 0, 0);
+        const repeatInterval = Math.max(Number(this.props.repeatInterval) || 0, 0);
+        const repeatCount = Math.max(Number(this.props.repeatCount) || 0, 0);
 
         this.releaseTimer();
 
-        this.enterTimer = setTimeout(() => {
-            this.intervalTimer = setInterval(() => {
-                if (this.intervalTimer && (typeof callback === 'function')) {
-                    callback(...args);
+        let repeatAmount = 0;
+        this.repeatDelayTimer = setTimeout(() => {
+            if (typeof this.props.onHoldStart === 'function') {
+                this.props.onHoldStart();
+            }
+            if (typeof this.props.onHold === 'function') {
+                if (!repeatCount || (repeatAmount < repeatCount)) {
+                    ++repeatAmount;
+                    this.props.onHold();
                 }
-            }, intervalDelay);
-        }, enterDelay);
+            }
+            this.repeatIntervalTimer = setInterval(() => {
+                if (this.repeatIntervalTimer && (typeof this.props.onHold === 'function')) {
+                    if (!repeatCount || (repeatAmount < repeatCount)) {
+                        ++repeatAmount;
+                        this.props.onHold();
+                    }
+                }
+            }, repeatInterval);
+        }, repeatDelay);
     };
 
     releaseTimer = () => {
-        if (this.enterTimer) {
-            clearTimeout(this.enterTimer);
-            this.enterTimer = null;
+        if (this.repeatDelayTimer) {
+            clearTimeout(this.repeatDelayTimer);
+            this.repeatDelayTimer = null;
         }
-        if (this.intervalTimer) {
-            clearInterval(this.intervalTimer);
-            this.intervalTimer = null;
+        if (this.repeatIntervalTimer) {
+            clearInterval(this.repeatIntervalTimer);
+            this.repeatIntervalTimer = null;
         }
     };
 
@@ -49,49 +88,57 @@ class Repeatable extends PureComponent {
         this.releaseTimer();
     }
     render() {
-        const { children } = this.props;
+        const {
+            repeatDelay, // eslint-disable-line
+            repeatInterval, // eslint-disable-line
+            repeatCount, // eslint-disable-line
+            onPress, // eslint-disable-line
+            onHoldStart, // eslint-disable-line
+            onHold, // eslint-disable-line
+            onHoldEnd, // eslint-disable-line
+            onRelease, // eslint-disable-line
+            ...props
+        } = this.props;
 
-        const items = React.Children.map(children, child => {
-            if (!React.isValidElement(child)) {
-                return child;
+        const release = (event) => {
+            if (typeof this.props.onRelease === 'function') {
+                this.props.onRelease(event);
             }
 
-            const release = (event) => {
-                this.releaseTimer();
+            this.releaseTimer();
 
-                setTimeout(() => {
-                    if (typeof this.props.onRelease === 'function') {
-                        this.props.onRelease(event);
-                    }
-                }, 0);
-            };
-            const press = ((callback) => (event) => {
-                event.persist();
-
-                const releaseOnce = (event) => {
-                    document.documentElement.removeEventListener('mouseup', releaseOnce);
-                    release(event);
-                };
-                document.documentElement.addEventListener('mouseup', releaseOnce);
-
-                if (typeof this.props.onPress === 'function') {
-                    this.props.onPress(event);
+            setTimeout(() => {
+                if (typeof this.props.onHoldEnd === 'function') {
+                    this.props.onHoldEnd();
                 }
+            }, 0);
+        };
 
-                this.acquireTimer(callback, event);
-            })(child.props.onClick);
+        const press = (event) => {
+            event.persist();
 
-            return cloneElement(child, {
-                onMouseDown: press,
-                onMouseUp: release,
-                onTouchStart: press,
-                onTouchCancel: release,
-                onTouchEnd: release
-            });
-        });
+            const releaseOnce = (event) => {
+                document.documentElement.removeEventListener('mouseup', releaseOnce);
+                release(event);
+            };
+            document.documentElement.addEventListener('mouseup', releaseOnce);
+
+            if (typeof this.props.onPress === 'function') {
+                this.props.onPress(event);
+            }
+
+            this.acquireTimer();
+        };
 
         return (
-            <div>{items}</div>
+            <div
+                role="presentation"
+                {...props}
+                onMouseDown={press}
+                onTouchStart={press}
+                onTouchCancel={release}
+                onTouchEnd={release}
+            />
         );
     }
 }

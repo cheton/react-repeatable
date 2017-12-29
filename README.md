@@ -2,7 +2,7 @@
 
 [![NPM](https://nodei.co/npm/react-repeatable.png?downloads=true&stars=true)](https://nodei.co/npm/react-repeatable/)
 
-A press and hold wrapper component that can trigger action multiple times while holding down a clickable element.
+A press and hold wrapper component that can trigger hold action multiple times while holding down.
 
 Demo: https://cheton.github.io/react-repeatable
 
@@ -16,10 +16,19 @@ npm install --save react-repeatable
 
 ```js
 <Repeatable
-    enterDelay={500}
-    intervalDelay={50}
+    repeatDelay={500}
+    repeatInterval={32}
     onPress{(event) => {
         // Callback fired when the mousedown or touchstart event is triggered.
+    }}
+    onHoldStart={() => {
+        // Callback fired once before the first hold action.
+    }}
+    onHold={() => {
+        // Callback fired mutiple times while holding down.
+    }}
+    onHoldEnd={() => {
+        // Callback fired once after the last hold action.
     }}
     onRelease={(event) => {
         // Callback fired when the mouseup, touchcancel, or touchend event is triggered.
@@ -42,10 +51,14 @@ npm install --save react-repeatable
 
 Name | Type | Default | Description
 :--- | :--- | :------ | :----------
-enterDelay | Number | 500 | The time (in milliseconds) to wait before the action is being triggered.
-intervalDelay | Number | 50 | The intervals (in milliseconds) on how often to trigger the action.
-onPress | Function | | Callback fired when the mousedown or touchstart event is triggered.
-onRelease | Function | | Callback fired when the mouseup, touchcancel, or touchend event is triggered.
+repeatDelay | Number | 500 | The time (in milliseconds) to wait before the first hold action is being triggered.
+repeatInterval | Number | 32 | The time interval (in milliseconds) on how often to trigger a hold action.
+repeatCount | Number | | The number of times the hold action will take place.
+onPress | Function(event) | | Callback fired when the mousedown or touchstart event is triggered.
+onHoldStart | Function() | | Callback fired once when the hold action is started.
+onHold | Function() | | Callback fired mutiple times while holding down.
+onHoldEnd | Function() | | Callback fired once when the hold action has finished.
+onRelease | Function(event) | | Callback fired when the mouseup, touchcancel, or touchend event is triggered.
 
 ## License
 

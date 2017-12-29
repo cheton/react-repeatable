@@ -3,54 +3,27 @@ import '@trendmicro/react-buttons/dist/react-buttons.css';
 import 'rc-slider/dist/rc-slider.css';
 import { Button } from '@trendmicro/react-buttons';
 import cx from 'classnames';
-import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import Slider from 'rc-slider';
 import Navbar from './Navbar';
 import Section from './Section';
+import Progress from './Progress';
 import Repeatable from '../src';
-
-const Progress = ({ min = 0, max = 100, now = 0, className, style, ...props }) => (
-    <div
-        {...props}
-        className={cx('progress', className)}
-        style={{
-            ...style,
-            margin: '12px 0',
-            fontSize: 20,
-            lineHeight: '2rem'
-        }}
-    >
-        <div
-            className="progress-bar bg-info"
-            style={{
-                height: '2rem',
-                lineHeight: '2rem',
-                width: `${now}%`
-            }}
-            role="progressbar"
-            aria-valuenow={now}
-            aria-valuemin={min}
-            aria-valuemax={max}
-        >
-            {now}%
-        </div>
-    </div>
-);
-
-Progress.propTypes = {
-    min: PropTypes.number,
-    max: PropTypes.number,
-    now: PropTypes.number
-};
 
 class App extends PureComponent {
     state = {
-        enterDelay: 500,
-        intervalDelay: 50,
-        pressing1: false,
-        pressing2: false,
+        repeatDelay: Repeatable.defaultProps.repeatDelay,
+        repeatInterval: Repeatable.defaultProps.repeatInterval,
+        repeatCount: 0,
+        button1: {
+            pressed: false,
+            holding: false
+        },
+        button2: {
+            pressed: false,
+            holding: false
+        },
         value: 0
     };
 
@@ -63,17 +36,13 @@ class App extends PureComponent {
         }
     };
 
-    resetValue = () => {
-        this.setState({
-            pressing1: false,
-            pressing2: false,
-            value: 0
-        });
-    };
-
     render() {
         const name = 'React Repeatable';
         const url = 'https://github.com/cheton/react-repeatable';
+        const {
+            button1,
+            button2
+        } = this.state;
 
         return (
             <div>
@@ -81,35 +50,51 @@ class App extends PureComponent {
                 <div className="container-fluid" style={{ padding: '20px 20px 0' }}>
                     <div className="row">
                         <div className="col-md-12">
-                            <Section className="row-sm-4">
+                            <Section className="row-sm-5">
                                 <div style={{ marginBottom: 12 }}>
                                     <label>
-                                        Enter delay: {this.state.enterDelay} ms
+                                        Repeat delay: {this.state.repeatDelay} ms
                                     </label>
                                     <div>
                                         <Slider
                                             min={0}
-                                            max={2000}
+                                            max={1000}
                                             step={10}
-                                            value={this.state.enterDelay}
+                                            value={this.state.repeatDelay}
                                             onChange={(value) => {
-                                                this.setState({ enterDelay: value });
+                                                this.setState({ repeatDelay: value });
                                             }}
                                         />
                                     </div>
                                 </div>
                                 <div style={{ marginBottom: 24 }}>
                                     <label>
-                                        Interval delay: {this.state.intervalDelay} ms
+                                        Repeat interval: {this.state.repeatInterval} ms
                                     </label>
                                     <div>
                                         <Slider
                                             min={10}
                                             max={1000}
                                             step={10}
-                                            value={this.state.intervalDelay}
+                                            value={this.state.repeatInterval}
                                             onChange={(value) => {
-                                                this.setState({ intervalDelay: value });
+                                                this.setState({ repeatInterval: value });
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ marginBottom: 24 }}>
+                                    <label>
+                                        Repeat count: {this.state.repeatCount || 'N/A'}
+                                    </label>
+                                    <div>
+                                        <Slider
+                                            min={0}
+                                            max={100}
+                                            step={1}
+                                            value={this.state.repeatCount}
+                                            onChange={(value) => {
+                                                this.setState({ repeatCount: value });
                                             }}
                                         />
                                     </div>
@@ -120,21 +105,117 @@ class App extends PureComponent {
                                     now={this.state.value}
                                 />
                                 <Repeatable
-                                    enterDelay={Number(this.state.enterDelay) || 500}
-                                    intervalDelay={Number(this.state.intervalDelay) || 50}
-                                    onRelease={this.resetValue}
+                                    style={{ display: 'inline-block', marginLeft: 0 }}
+                                    repeatDelay={Number(this.state.repeatDelay)}
+                                    repeatInterval={Number(this.state.repeatInterval)}
+                                    repeatCount={Number(this.state.repeatCount)}
+                                    onPress={() => {
+                                        console.log('[1] onPress');
+                                        this.setState({
+                                            button1: {
+                                                pressed: true,
+                                                holding: false
+                                            }
+                                        });
+                                    }}
+                                    onHoldStart={() => {
+                                        console.log('[1] onHoldStart');
+                                        this.setState({
+                                            value: 0
+                                        });
+                                    }}
+                                    onHold={() => {
+                                        console.log('[1] onHold');
+                                        this.setState(state => ({
+                                            button1: {
+                                                pressed: true,
+                                                holding: true
+                                            },
+                                            value: Math.min(state.value + 1, 100)
+                                        }));
+                                    }}
+                                    onHoldEnd={() => {
+                                        console.log('[1] onHoldEnd');
+                                        this.setState({
+                                            value: 0
+                                        });
+                                    }}
+                                    onRelease={() => {
+                                        console.log('[1] onRelease');
+                                        this.setState({
+                                            button1: {
+                                                pressed: false,
+                                                holding: false
+                                            }
+                                        });
+                                    }}
                                 >
                                     <Button
-                                        btnStyle={this.state.pressing1 ? 'danger' : 'primary'}
-                                        onClick={this.increaseValue('pressing1', 1)}
+                                        btnStyle={cx({
+                                            'default': !button1.holding,
+                                            'emphasis': button1.pressed && button1.holding
+                                        })}
                                     >
-                                        {this.state.pressing1 ? 'Pressing... (1x)' : 'Press Me (1x)'}
+                                        {!button1.pressed && 'Press Me (1x)'}
+                                        {button1.pressed && !button1.holding && 'Pressing... (1x)'}
+                                        {button1.pressed && button1.holding && 'Holding (1x)'}
                                     </Button>
+                                </Repeatable>
+                                <Repeatable
+                                    style={{ display: 'inline-block', marginLeft: 8 }}
+                                    repeatDelay={Number(this.state.repeatDelay)}
+                                    repeatInterval={Number(this.state.repeatInterval)}
+                                    repeatCount={Number(this.state.repeatCount)}
+                                    onPress={() => {
+                                        console.log('[2] onPress');
+                                        this.setState({
+                                            button2: {
+                                                pressed: true,
+                                                holding: false
+                                            }
+                                        });
+                                    }}
+                                    onHoldStart={() => {
+                                        console.log('[2] onHoldStart');
+                                        this.setState({
+                                            value: 0
+                                        });
+                                    }}
+                                    onHold={() => {
+                                        console.log('[2] onHold');
+                                        this.setState(state => ({
+                                            button2: {
+                                                pressed: true,
+                                                holding: true
+                                            },
+                                            value: Math.min(state.value + 5, 100)
+                                        }));
+                                    }}
+                                    onHoldEnd={() => {
+                                        console.log('[2] onHoldEnd');
+                                        this.setState({
+                                            value: 0
+                                        });
+                                    }}
+                                    onRelease={(event) => {
+                                        console.log('[2] onRelease');
+                                        this.setState({
+                                            button2: {
+                                                pressed: false,
+                                                holding: false
+                                            }
+                                        });
+                                    }}
+                                >
                                     <Button
-                                        btnStyle={this.state.pressing2 ? 'danger' : 'primary'}
-                                        onClick={this.increaseValue('pressing2', 5)}
+                                        btnStyle={cx({
+                                            'default': !button2.holding,
+                                            'emphasis': button2.pressed && button2.holding
+                                        })}
                                     >
-                                        {this.state.pressing2 ? 'Pressing... (5x)' : 'Press Me (5x)'}
+                                        {!button2.pressed && 'Press Me (5x)'}
+                                        {button2.pressed && !button2.holding && 'Pressing... (5x)'}
+                                        {button2.pressed && button2.holding && 'Holding (5x)'}
                                     </Button>
                                 </Repeatable>
                             </Section>

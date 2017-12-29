@@ -29842,9 +29842,11 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _class, _temp2, _initialiseProps;
+var _class, _temp2;
 
 var _propTypes = __webpack_require__("../node_modules/prop-types/index.js");
 
@@ -29855,6 +29857,8 @@ var _react = __webpack_require__("../node_modules/react/index.js");
 var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -29876,7 +29880,43 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
             args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Repeatable.__proto__ || Object.getPrototypeOf(Repeatable)).call.apply(_ref, [this].concat(args))), _this), _initialiseProps.call(_this), _temp), _possibleConstructorReturn(_this, _ret);
+        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Repeatable.__proto__ || Object.getPrototypeOf(Repeatable)).call.apply(_ref, [this].concat(args))), _this), _this.repeatDelayTimer = null, _this.repeatIntervalTimer = null, _this.acquireTimer = function () {
+            var repeatDelay = Math.max(Number(_this.props.repeatDelay) || 0, 0);
+            var repeatInterval = Math.max(Number(_this.props.repeatInterval) || 0, 0);
+            var repeatCount = Math.max(Number(_this.props.repeatCount) || 0, 0);
+
+            _this.releaseTimer();
+
+            var repeatAmount = 0;
+            _this.repeatDelayTimer = setTimeout(function () {
+                if (typeof _this.props.onHoldStart === 'function') {
+                    _this.props.onHoldStart();
+                }
+                if (typeof _this.props.onHold === 'function') {
+                    if (!repeatCount || repeatAmount < repeatCount) {
+                        ++repeatAmount;
+                        _this.props.onHold();
+                    }
+                }
+                _this.repeatIntervalTimer = setInterval(function () {
+                    if (_this.repeatIntervalTimer && typeof _this.props.onHold === 'function') {
+                        if (!repeatCount || repeatAmount < repeatCount) {
+                            ++repeatAmount;
+                            _this.props.onHold();
+                        }
+                    }
+                }, repeatInterval);
+            }, repeatDelay);
+        }, _this.releaseTimer = function () {
+            if (_this.repeatDelayTimer) {
+                clearTimeout(_this.repeatDelayTimer);
+                _this.repeatDelayTimer = null;
+            }
+            if (_this.repeatIntervalTimer) {
+                clearInterval(_this.repeatIntervalTimer);
+                _this.repeatIntervalTimer = null;
+            }
+        }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
     _createClass(Repeatable, [{
@@ -29889,106 +29929,86 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
         value: function render() {
             var _this2 = this;
 
-            var children = this.props.children;
+            var _props = this.props,
+                repeatDelay = _props.repeatDelay,
+                repeatInterval = _props.repeatInterval,
+                repeatCount = _props.repeatCount,
+                onPress = _props.onPress,
+                onHoldStart = _props.onHoldStart,
+                onHold = _props.onHold,
+                onHoldEnd = _props.onHoldEnd,
+                onRelease = _props.onRelease,
+                props = _objectWithoutProperties(_props, ['repeatDelay', 'repeatInterval', 'repeatCount', 'onPress', 'onHoldStart', 'onHold', 'onHoldEnd', 'onRelease']);
 
-
-            var items = _react2.default.Children.map(children, function (child) {
-                if (!_react2.default.isValidElement(child)) {
-                    return child;
+            var release = function release(event) {
+                if (typeof _this2.props.onRelease === 'function') {
+                    _this2.props.onRelease(event);
                 }
 
-                var release = function release(event) {
-                    _this2.releaseTimer();
+                _this2.releaseTimer();
 
-                    setTimeout(function () {
-                        if (typeof _this2.props.onRelease === 'function') {
-                            _this2.props.onRelease(event);
-                        }
-                    }, 0);
+                setTimeout(function () {
+                    if (typeof _this2.props.onHoldEnd === 'function') {
+                        _this2.props.onHoldEnd();
+                    }
+                }, 0);
+            };
+
+            var press = function press(event) {
+                event.persist();
+
+                var releaseOnce = function releaseOnce(event) {
+                    document.documentElement.removeEventListener('mouseup', releaseOnce);
+                    release(event);
                 };
-                var press = function (callback) {
-                    return function (event) {
-                        event.persist();
+                document.documentElement.addEventListener('mouseup', releaseOnce);
 
-                        var releaseOnce = function releaseOnce(event) {
-                            document.documentElement.removeEventListener('mouseup', releaseOnce);
-                            release(event);
-                        };
-                        document.documentElement.addEventListener('mouseup', releaseOnce);
+                if (typeof _this2.props.onPress === 'function') {
+                    _this2.props.onPress(event);
+                }
 
-                        if (typeof _this2.props.onPress === 'function') {
-                            _this2.props.onPress(event);
-                        }
+                _this2.acquireTimer();
+            };
 
-                        _this2.acquireTimer(callback, event);
-                    };
-                }(child.props.onClick);
-
-                return (0, _react.cloneElement)(child, {
-                    onMouseDown: press,
-                    onMouseUp: release,
-                    onTouchStart: press,
-                    onTouchCancel: release,
-                    onTouchEnd: release
-                });
-            });
-
-            return _react2.default.createElement(
-                'div',
-                null,
-                items
-            );
+            return _react2.default.createElement('div', _extends({
+                role: 'presentation'
+            }, props, {
+                onMouseDown: press,
+                onTouchStart: press,
+                onTouchCancel: release,
+                onTouchEnd: release
+            }));
         }
     }]);
 
     return Repeatable;
 }(_react.PureComponent), _class.propTypes = {
-    // The time (in milliseconds) to wait before the action is being triggered.
-    enterDelay: _propTypes2.default.number,
+    // The time (in milliseconds) to wait before the first hold action is being triggered.
+    repeatDelay: _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.string]),
 
-    // The intervals (in milliseconds) on how often to trigger the action.
-    intervalDelay: _propTypes2.default.number,
+    // The time interval (in milliseconds) on how often to trigger a hold action.
+    repeatInterval: _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.string]),
+
+    // The number of times the hold action will take place.
+    repeatCount: _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.string]),
 
     // Callback fired when the mousedown or touchstart event is triggered.
     onPress: _propTypes2.default.func,
 
+    // Callback fired once before the first hold action.
+    onHoldStart: _propTypes2.default.func,
+
+    // Callback fired mutiple times while holding down.
+    onHold: _propTypes2.default.func,
+
+    // Callback fired once after the last hold action.
+    onHoldEnd: _propTypes2.default.func,
+
     // Callback fired when the mouseup, touchcancel, or touchend event is triggered.
     onRelease: _propTypes2.default.func
-}, _initialiseProps = function _initialiseProps() {
-    var _this3 = this;
-
-    this.enterTimer = null;
-    this.intervalTimer = null;
-
-    this.acquireTimer = function (callback) {
-        for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-            args[_key2 - 1] = arguments[_key2];
-        }
-
-        var enterDelay = Number(_this3.props.enterDelay) || 500;
-        var intervalDelay = Number(_this3.props.intervalDelay) || 50;
-
-        _this3.releaseTimer();
-
-        _this3.enterTimer = setTimeout(function () {
-            _this3.intervalTimer = setInterval(function () {
-                if (_this3.intervalTimer && typeof callback === 'function') {
-                    callback.apply(undefined, args);
-                }
-            }, intervalDelay);
-        }, enterDelay);
-    };
-
-    this.releaseTimer = function () {
-        if (_this3.enterTimer) {
-            clearTimeout(_this3.enterTimer);
-            _this3.enterTimer = null;
-        }
-        if (_this3.intervalTimer) {
-            clearInterval(_this3.intervalTimer);
-            _this3.intervalTimer = null;
-        }
-    };
+}, _class.defaultProps = {
+    repeatDelay: 500,
+    repeatInterval: 32
 }, _temp2);
 exports.default = Repeatable;
 
@@ -30189,6 +30209,85 @@ if(false) {
 
 /***/ }),
 
+/***/ "./Progress.jsx":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _classnames = __webpack_require__("../node_modules/classnames/index.js");
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+var _propTypes = __webpack_require__("../node_modules/prop-types/index.js");
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__("../node_modules/react/index.js");
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+var Progress = function Progress(_ref) {
+    var _ref$min = _ref.min,
+        min = _ref$min === undefined ? 0 : _ref$min,
+        _ref$max = _ref.max,
+        max = _ref$max === undefined ? 100 : _ref$max,
+        _ref$now = _ref.now,
+        now = _ref$now === undefined ? 0 : _ref$now,
+        className = _ref.className,
+        style = _ref.style,
+        props = _objectWithoutProperties(_ref, ['min', 'max', 'now', 'className', 'style']);
+
+    return _react2.default.createElement(
+        'div',
+        _extends({}, props, {
+            className: (0, _classnames2.default)('progress', className),
+            style: _extends({}, style, {
+                margin: '12px 0',
+                fontSize: 20,
+                lineHeight: '2rem'
+            })
+        }),
+        _react2.default.createElement(
+            'div',
+            {
+                className: 'progress-bar bg-info',
+                style: {
+                    height: '2rem',
+                    lineHeight: '2rem',
+                    width: now + '%'
+                },
+                role: 'progressbar',
+                'aria-valuenow': now,
+                'aria-valuemin': min,
+                'aria-valuemax': max
+            },
+            now,
+            '%'
+        )
+    );
+};
+
+Progress.propTypes = {
+    min: _propTypes2.default.number,
+    max: _propTypes2.default.number,
+    now: _propTypes2.default.number
+};
+
+exports.default = Progress;
+
+/***/ }),
+
 /***/ "./Section.jsx":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -30267,8 +30366,6 @@ if(false) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 __webpack_require__("../node_modules/trendmicro-ui/dist/css/trendmicro-ui.css");
 
 __webpack_require__("../node_modules/@trendmicro/react-buttons/dist/react-buttons.css");
@@ -30280,10 +30377,6 @@ var _reactButtons = __webpack_require__("../node_modules/@trendmicro/react-butto
 var _classnames = __webpack_require__("../node_modules/classnames/index.js");
 
 var _classnames2 = _interopRequireDefault(_classnames);
-
-var _propTypes = __webpack_require__("../node_modules/prop-types/index.js");
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
 
 var _react = __webpack_require__("../node_modules/react/index.js");
 
@@ -30305,6 +30398,10 @@ var _Section = __webpack_require__("./Section.jsx");
 
 var _Section2 = _interopRequireDefault(_Section);
 
+var _Progress = __webpack_require__("./Progress.jsx");
+
+var _Progress2 = _interopRequireDefault(_Progress);
+
 var _src = __webpack_require__("../src/index.js");
 
 var _src2 = _interopRequireDefault(_src);
@@ -30319,60 +30416,11 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-var Progress = function Progress(_ref) {
-    var _ref$min = _ref.min,
-        min = _ref$min === undefined ? 0 : _ref$min,
-        _ref$max = _ref.max,
-        max = _ref$max === undefined ? 100 : _ref$max,
-        _ref$now = _ref.now,
-        now = _ref$now === undefined ? 0 : _ref$now,
-        className = _ref.className,
-        style = _ref.style,
-        props = _objectWithoutProperties(_ref, ['min', 'max', 'now', 'className', 'style']);
-
-    return _react2.default.createElement(
-        'div',
-        _extends({}, props, {
-            className: (0, _classnames2.default)('progress', className),
-            style: _extends({}, style, {
-                margin: '12px 0',
-                fontSize: 20,
-                lineHeight: '2rem'
-            })
-        }),
-        _react2.default.createElement(
-            'div',
-            {
-                className: 'progress-bar bg-info',
-                style: {
-                    height: '2rem',
-                    lineHeight: '2rem',
-                    width: now + '%'
-                },
-                role: 'progressbar',
-                'aria-valuenow': now,
-                'aria-valuemin': min,
-                'aria-valuemax': max
-            },
-            now,
-            '%'
-        )
-    );
-};
-
-Progress.propTypes = {
-    min: _propTypes2.default.number,
-    max: _propTypes2.default.number,
-    now: _propTypes2.default.number
-};
-
 var App = function (_PureComponent) {
     _inherits(App, _PureComponent);
 
     function App() {
-        var _ref2;
+        var _ref;
 
         var _temp, _this, _ret;
 
@@ -30382,29 +30430,30 @@ var App = function (_PureComponent) {
             args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref2 = App.__proto__ || Object.getPrototypeOf(App)).call.apply(_ref2, [this].concat(args))), _this), _this.state = {
-            enterDelay: 500,
-            intervalDelay: 50,
-            pressing1: false,
-            pressing2: false,
+        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = App.__proto__ || Object.getPrototypeOf(App)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+            repeatDelay: _src2.default.defaultProps.repeatDelay,
+            repeatInterval: _src2.default.defaultProps.repeatInterval,
+            repeatCount: 0,
+            button1: {
+                pressed: false,
+                holding: false
+            },
+            button2: {
+                pressed: false,
+                holding: false
+            },
             value: 0
         }, _this.increaseValue = function (key) {
             var incr = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
             return function (event) {
                 if (_this.state.value < 100) {
                     _this.setState(function (state) {
-                        var _ref3;
+                        var _ref2;
 
-                        return _ref3 = {}, _defineProperty(_ref3, key, true), _defineProperty(_ref3, 'value', state.value + incr), _ref3;
+                        return _ref2 = {}, _defineProperty(_ref2, key, true), _defineProperty(_ref2, 'value', state.value + incr), _ref2;
                     });
                 }
             };
-        }, _this.resetValue = function () {
-            _this.setState({
-                pressing1: false,
-                pressing2: false,
-                value: 0
-            });
         }, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
@@ -30415,6 +30464,10 @@ var App = function (_PureComponent) {
 
             var name = 'React Repeatable';
             var url = 'https://github.com/cheton/react-repeatable';
+            var _state = this.state,
+                button1 = _state.button1,
+                button2 = _state.button2;
+
 
             return _react2.default.createElement(
                 'div',
@@ -30431,15 +30484,15 @@ var App = function (_PureComponent) {
                             { className: 'col-md-12' },
                             _react2.default.createElement(
                                 _Section2.default,
-                                { className: 'row-sm-4' },
+                                { className: 'row-sm-5' },
                                 _react2.default.createElement(
                                     'div',
                                     { style: { marginBottom: 12 } },
                                     _react2.default.createElement(
                                         'label',
                                         null,
-                                        'Enter delay: ',
-                                        this.state.enterDelay,
+                                        'Repeat delay: ',
+                                        this.state.repeatDelay,
                                         ' ms'
                                     ),
                                     _react2.default.createElement(
@@ -30447,11 +30500,11 @@ var App = function (_PureComponent) {
                                         null,
                                         _react2.default.createElement(_rcSlider2.default, {
                                             min: 0,
-                                            max: 2000,
+                                            max: 1000,
                                             step: 10,
-                                            value: this.state.enterDelay,
+                                            value: this.state.repeatDelay,
                                             onChange: function onChange(value) {
-                                                _this2.setState({ enterDelay: value });
+                                                _this2.setState({ repeatDelay: value });
                                             }
                                         })
                                     )
@@ -30462,8 +30515,8 @@ var App = function (_PureComponent) {
                                     _react2.default.createElement(
                                         'label',
                                         null,
-                                        'Interval delay: ',
-                                        this.state.intervalDelay,
+                                        'Repeat interval: ',
+                                        this.state.repeatInterval,
                                         ' ms'
                                     ),
                                     _react2.default.createElement(
@@ -30473,14 +30526,37 @@ var App = function (_PureComponent) {
                                             min: 10,
                                             max: 1000,
                                             step: 10,
-                                            value: this.state.intervalDelay,
+                                            value: this.state.repeatInterval,
                                             onChange: function onChange(value) {
-                                                _this2.setState({ intervalDelay: value });
+                                                _this2.setState({ repeatInterval: value });
                                             }
                                         })
                                     )
                                 ),
-                                _react2.default.createElement(Progress, {
+                                _react2.default.createElement(
+                                    'div',
+                                    { style: { marginBottom: 24 } },
+                                    _react2.default.createElement(
+                                        'label',
+                                        null,
+                                        'Repeat count: ',
+                                        this.state.repeatCount || 'N/A'
+                                    ),
+                                    _react2.default.createElement(
+                                        'div',
+                                        null,
+                                        _react2.default.createElement(_rcSlider2.default, {
+                                            min: 0,
+                                            max: 100,
+                                            step: 1,
+                                            value: this.state.repeatCount,
+                                            onChange: function onChange(value) {
+                                                _this2.setState({ repeatCount: value });
+                                            }
+                                        })
+                                    )
+                                ),
+                                _react2.default.createElement(_Progress2.default, {
                                     min: 0,
                                     max: 100,
                                     now: this.state.value
@@ -30488,25 +30564,127 @@ var App = function (_PureComponent) {
                                 _react2.default.createElement(
                                     _src2.default,
                                     {
-                                        enterDelay: Number(this.state.enterDelay) || 500,
-                                        intervalDelay: Number(this.state.intervalDelay) || 50,
-                                        onRelease: this.resetValue
+                                        style: { display: 'inline-block', marginLeft: 0 },
+                                        repeatDelay: Number(this.state.repeatDelay),
+                                        repeatInterval: Number(this.state.repeatInterval),
+                                        repeatCount: Number(this.state.repeatCount),
+                                        onPress: function onPress() {
+                                            console.log('[1] onPress');
+                                            _this2.setState({
+                                                button1: {
+                                                    pressed: true,
+                                                    holding: false
+                                                }
+                                            });
+                                        },
+                                        onHoldStart: function onHoldStart() {
+                                            console.log('[1] onHoldStart');
+                                            _this2.setState({
+                                                value: 0
+                                            });
+                                        },
+                                        onHold: function onHold() {
+                                            console.log('[1] onHold');
+                                            _this2.setState(function (state) {
+                                                return {
+                                                    button1: {
+                                                        pressed: true,
+                                                        holding: true
+                                                    },
+                                                    value: Math.min(state.value + 1, 100)
+                                                };
+                                            });
+                                        },
+                                        onHoldEnd: function onHoldEnd() {
+                                            console.log('[1] onHoldEnd');
+                                            _this2.setState({
+                                                value: 0
+                                            });
+                                        },
+                                        onRelease: function onRelease() {
+                                            console.log('[1] onRelease');
+                                            _this2.setState({
+                                                button1: {
+                                                    pressed: false,
+                                                    holding: false
+                                                }
+                                            });
+                                        }
                                     },
                                     _react2.default.createElement(
                                         _reactButtons.Button,
                                         {
-                                            btnStyle: this.state.pressing1 ? 'danger' : 'primary',
-                                            onClick: this.increaseValue('pressing1', 1)
+                                            btnStyle: (0, _classnames2.default)({
+                                                'default': !button1.holding,
+                                                'emphasis': button1.pressed && button1.holding
+                                            })
                                         },
-                                        this.state.pressing1 ? 'Pressing... (1x)' : 'Press Me (1x)'
-                                    ),
+                                        !button1.pressed && 'Press Me (1x)',
+                                        button1.pressed && !button1.holding && 'Pressing... (1x)',
+                                        button1.pressed && button1.holding && 'Holding (1x)'
+                                    )
+                                ),
+                                _react2.default.createElement(
+                                    _src2.default,
+                                    {
+                                        style: { display: 'inline-block', marginLeft: 8 },
+                                        repeatDelay: Number(this.state.repeatDelay),
+                                        repeatInterval: Number(this.state.repeatInterval),
+                                        repeatCount: Number(this.state.repeatCount),
+                                        onPress: function onPress() {
+                                            console.log('[2] onPress');
+                                            _this2.setState({
+                                                button2: {
+                                                    pressed: true,
+                                                    holding: false
+                                                }
+                                            });
+                                        },
+                                        onHoldStart: function onHoldStart() {
+                                            console.log('[2] onHoldStart');
+                                            _this2.setState({
+                                                value: 0
+                                            });
+                                        },
+                                        onHold: function onHold() {
+                                            console.log('[2] onHold');
+                                            _this2.setState(function (state) {
+                                                return {
+                                                    button2: {
+                                                        pressed: true,
+                                                        holding: true
+                                                    },
+                                                    value: Math.min(state.value + 5, 100)
+                                                };
+                                            });
+                                        },
+                                        onHoldEnd: function onHoldEnd() {
+                                            console.log('[2] onHoldEnd');
+                                            _this2.setState({
+                                                value: 0
+                                            });
+                                        },
+                                        onRelease: function onRelease(event) {
+                                            console.log('[2] onRelease');
+                                            _this2.setState({
+                                                button2: {
+                                                    pressed: false,
+                                                    holding: false
+                                                }
+                                            });
+                                        }
+                                    },
                                     _react2.default.createElement(
                                         _reactButtons.Button,
                                         {
-                                            btnStyle: this.state.pressing2 ? 'danger' : 'primary',
-                                            onClick: this.increaseValue('pressing2', 5)
+                                            btnStyle: (0, _classnames2.default)({
+                                                'default': !button2.holding,
+                                                'emphasis': button2.pressed && button2.holding
+                                            })
                                         },
-                                        this.state.pressing2 ? 'Pressing... (5x)' : 'Press Me (5x)'
+                                        !button2.pressed && 'Press Me (5x)',
+                                        button2.pressed && !button2.holding && 'Pressing... (5x)',
+                                        button2.pressed && button2.holding && 'Holding (5x)'
                                     )
                                 )
                             )
@@ -30525,4 +30703,4 @@ _reactDom2.default.render(_react2.default.createElement(App, null), document.get
 /***/ })
 
 /******/ });
-//# sourceMappingURL=bundle.js.map?b7072ed60c2cd79b3ec4
+//# sourceMappingURL=bundle.js.map?7b6bbb7b632eb718a840
