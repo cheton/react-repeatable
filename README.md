@@ -16,6 +16,7 @@ npm install --save react-repeatable
 
 ```js
 <Repeatable
+    style={{ display: 'inline-block' }}
     repeatDelay={500}
     repeatInterval={32}
     onPress{(event) => {
