@@ -29880,30 +29880,37 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
             args[_key] = arguments[_key];
         }
 
-        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Repeatable.__proto__ || Object.getPrototypeOf(Repeatable)).call.apply(_ref, [this].concat(args))), _this), _this.repeatDelayTimer = null, _this.repeatIntervalTimer = null, _this.acquireTimer = function () {
+        return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Repeatable.__proto__ || Object.getPrototypeOf(Repeatable)).call.apply(_ref, [this].concat(args))), _this), _this.repeatDelayTimer = null, _this.repeatIntervalTimer = null, _this.repeatAmount = 0, _this.acquireTimer = function () {
             var repeatDelay = Math.max(Number(_this.props.repeatDelay) || 0, 0);
             var repeatInterval = Math.max(Number(_this.props.repeatInterval) || 0, 0);
             var repeatCount = Math.max(Number(_this.props.repeatCount) || 0, 0);
 
+            _this.repeatAmount = 0;
             _this.releaseTimer();
 
-            var repeatAmount = 0;
             _this.repeatDelayTimer = setTimeout(function () {
+                if (repeatCount > 0 && _this.repeatAmount >= repeatCount) {
+                    return;
+                }
+
+                _this.repeatAmount++;
+
                 if (typeof _this.props.onHoldStart === 'function') {
                     _this.props.onHoldStart();
                 }
                 if (typeof _this.props.onHold === 'function') {
-                    if (!repeatCount || repeatAmount < repeatCount) {
-                        ++repeatAmount;
-                        _this.props.onHold();
-                    }
+                    _this.props.onHold();
                 }
+
                 _this.repeatIntervalTimer = setInterval(function () {
-                    if (_this.repeatIntervalTimer && typeof _this.props.onHold === 'function') {
-                        if (!repeatCount || repeatAmount < repeatCount) {
-                            ++repeatAmount;
-                            _this.props.onHold();
-                        }
+                    if (repeatCount > 0 && _this.repeatAmount >= repeatCount) {
+                        return;
+                    }
+
+                    _this.repeatAmount++;
+
+                    if (typeof _this.props.onHold === 'function') {
+                        _this.props.onHold();
                     }
                 }, repeatInterval);
             }, repeatDelay);
@@ -29922,6 +29929,7 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
     _createClass(Repeatable, [{
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
+            this.repeatAmount = 0;
             this.releaseTimer();
         }
     }, {
@@ -29941,17 +29949,18 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
                 props = _objectWithoutProperties(_props, ['repeatDelay', 'repeatInterval', 'repeatCount', 'onPress', 'onHoldStart', 'onHold', 'onHoldEnd', 'onRelease']);
 
             var release = function release(event) {
-                if (typeof _this2.props.onRelease === 'function') {
-                    _this2.props.onRelease(event);
-                }
-
-                _this2.releaseTimer();
-
-                setTimeout(function () {
+                if (_this2.repeatAmount > 0) {
                     if (typeof _this2.props.onHoldEnd === 'function') {
                         _this2.props.onHoldEnd();
                     }
-                }, 0);
+                }
+
+                _this2.repeatAmount = 0;
+                _this2.releaseTimer();
+
+                if (typeof _this2.props.onRelease === 'function') {
+                    _this2.props.onRelease(event);
+                }
             };
 
             var press = function press(event) {
@@ -29989,7 +29998,7 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
     // The time interval (in milliseconds) on how often to trigger a hold action.
     repeatInterval: _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.string]),
 
-    // The number of times the hold action will take place.
+    // The number of times the hold action will take place. A zero value will disable the repeat counter.
     repeatCount: _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.string]),
 
     // Callback fired when the mousedown or touchstart event is triggered.
@@ -30008,7 +30017,8 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
     onRelease: _propTypes2.default.func
 }, _class.defaultProps = {
     repeatDelay: 500,
-    repeatInterval: 32
+    repeatInterval: 32,
+    repeatCount: 0
 }, _temp2);
 exports.default = Repeatable;
 
@@ -30703,4 +30713,4 @@ _reactDom2.default.render(_react2.default.createElement(App, null), document.get
 /***/ })
 
 /******/ });
-//# sourceMappingURL=bundle.js.map?7b6bbb7b632eb718a840
+//# sourceMappingURL=bundle.js.map?f0e503d902d5a2530239
