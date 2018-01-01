@@ -15,7 +15,7 @@ class Repeatable extends PureComponent {
             PropTypes.string
         ]),
 
-        // The number of times the hold action will take place.
+        // The number of times the hold action will take place. A zero value will disable the repeat counter.
         repeatCount: PropTypes.oneOfType([
             PropTypes.number,
             PropTypes.string
@@ -38,36 +38,45 @@ class Repeatable extends PureComponent {
     };
     static defaultProps = {
         repeatDelay: 500,
-        repeatInterval: 32
+        repeatInterval: 32,
+        repeatCount: 0
     };
 
     repeatDelayTimer = null;
     repeatIntervalTimer = null;
+    repeatAmount = 0;
 
     acquireTimer = () => {
         const repeatDelay = Math.max(Number(this.props.repeatDelay) || 0, 0);
         const repeatInterval = Math.max(Number(this.props.repeatInterval) || 0, 0);
         const repeatCount = Math.max(Number(this.props.repeatCount) || 0, 0);
 
+        this.repeatAmount = 0;
         this.releaseTimer();
 
-        let repeatAmount = 0;
         this.repeatDelayTimer = setTimeout(() => {
+            if ((repeatCount > 0) && (this.repeatAmount >= repeatCount)) {
+                return;
+            }
+
+            this.repeatAmount++;
+
             if (typeof this.props.onHoldStart === 'function') {
                 this.props.onHoldStart();
             }
             if (typeof this.props.onHold === 'function') {
-                if (!repeatCount || (repeatAmount < repeatCount)) {
-                    ++repeatAmount;
-                    this.props.onHold();
-                }
+                this.props.onHold();
             }
+
             this.repeatIntervalTimer = setInterval(() => {
-                if (this.repeatIntervalTimer && (typeof this.props.onHold === 'function')) {
-                    if (!repeatCount || (repeatAmount < repeatCount)) {
-                        ++repeatAmount;
-                        this.props.onHold();
-                    }
+                if ((repeatCount > 0) && (this.repeatAmount >= repeatCount)) {
+                    return;
+                }
+
+                this.repeatAmount++;
+
+                if (typeof this.props.onHold === 'function') {
+                    this.props.onHold();
                 }
             }, repeatInterval);
         }, repeatDelay);
@@ -85,6 +94,7 @@ class Repeatable extends PureComponent {
     };
 
     componentWillUnmount() {
+        this.repeatAmount = 0;
         this.releaseTimer();
     }
     render() {
@@ -101,17 +111,18 @@ class Repeatable extends PureComponent {
         } = this.props;
 
         const release = (event) => {
-            if (typeof this.props.onRelease === 'function') {
-                this.props.onRelease(event);
-            }
-
-            this.releaseTimer();
-
-            setTimeout(() => {
+            if (this.repeatAmount > 0) {
                 if (typeof this.props.onHoldEnd === 'function') {
                     this.props.onHoldEnd();
                 }
-            }, 0);
+            }
+
+            this.repeatAmount = 0;
+            this.releaseTimer();
+
+            if (typeof this.props.onRelease === 'function') {
+                this.props.onRelease(event);
+            }
         };
 
         const press = (event) => {
