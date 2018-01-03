@@ -164,7 +164,7 @@ class App extends PureComponent {
                                 <Repeatable
                                     style={{ display: 'inline-block', marginLeft: 8 }}
                                     repeatDelay={Number(this.state.repeatDelay)}
-                                    repeatInterval={Number(this.state.repeatInterval)}
+                                    repeatInterval={Number(this.state.repeatInterval / 5)}
                                     repeatCount={Number(this.state.repeatCount)}
                                     onPress={() => {
                                         console.log('[2] onPress');
@@ -188,7 +188,7 @@ class App extends PureComponent {
                                                 pressed: true,
                                                 holding: true
                                             },
-                                            value: Math.min(state.value + 5, 100)
+                                            value: Math.min(state.value + 1, 100)
                                         }));
                                     }}
                                     onHoldEnd={() => {
