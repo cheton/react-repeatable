@@ -2832,6 +2832,57 @@ for (var i = 0; i < DOMIterables.length; i++) {
 
 /***/ }),
 
+/***/ "../node_modules/chained-function/lib/chained-function.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+exports.default = function () {
+    for (var _len = arguments.length, funcs = Array(_len), _key = 0; _key < _len; _key++) {
+        funcs[_key] = arguments[_key];
+    }
+
+    return funcs.filter(function (func) {
+        return typeof func === 'function';
+    }).reduce(function (accumulator, func) {
+        if (accumulator === null) {
+            return func;
+        }
+
+        return function chainedFunction() {
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
+            }
+
+            accumulator.apply(this, args);
+            func.apply(this, args);
+        };
+    }, null);
+};
+
+/***/ }),
+
+/***/ "../node_modules/chained-function/lib/index.js":
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _chainedFunction = __webpack_require__("../node_modules/chained-function/lib/chained-function.js");
+
+var _chainedFunction2 = _interopRequireDefault(_chainedFunction);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = _chainedFunction2.default;
+
+/***/ }),
+
 /***/ "../node_modules/classnames/index.js":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -29848,6 +29899,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _class, _temp2;
 
+var _chainedFunction = __webpack_require__("../node_modules/chained-function/lib/index.js");
+
+var _chainedFunction2 = _interopRequireDefault(_chainedFunction);
+
 var _propTypes = __webpack_require__("../node_modules/prop-types/index.js");
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
@@ -29938,6 +29993,7 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
             var _this2 = this;
 
             var _props = this.props,
+                disabled = _props.disabled,
                 repeatDelay = _props.repeatDelay,
                 repeatInterval = _props.repeatInterval,
                 repeatCount = _props.repeatCount,
@@ -29946,7 +30002,11 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
                 onHold = _props.onHold,
                 onHoldEnd = _props.onHoldEnd,
                 onRelease = _props.onRelease,
-                props = _objectWithoutProperties(_props, ['repeatDelay', 'repeatInterval', 'repeatCount', 'onPress', 'onHoldStart', 'onHold', 'onHoldEnd', 'onRelease']);
+                onMouseDown = _props.onMouseDown,
+                onTouchStart = _props.onTouchStart,
+                onTouchCancel = _props.onTouchCancel,
+                onTouchEnd = _props.onTouchEnd,
+                props = _objectWithoutProperties(_props, ['disabled', 'repeatDelay', 'repeatInterval', 'repeatCount', 'onPress', 'onHoldStart', 'onHold', 'onHoldEnd', 'onRelease', 'onMouseDown', 'onTouchStart', 'onTouchCancel', 'onTouchEnd']);
 
             var release = function release(event) {
                 if (_this2.repeatAmount > 0) {
@@ -29982,16 +30042,39 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
             return _react2.default.createElement('div', _extends({
                 role: 'presentation'
             }, props, {
-                onMouseDown: press,
-                onTouchStart: press,
-                onTouchCancel: release,
-                onTouchEnd: release
+                onMouseDown: (0, _chainedFunction2.default)(onMouseDown, function (event) {
+                    if (disabled) {
+                        return;
+                    }
+                    press(event);
+                }),
+                onTouchStart: (0, _chainedFunction2.default)(onTouchStart, function (event) {
+                    if (disabled) {
+                        return;
+                    }
+                    press(event);
+                }),
+                onTouchCancel: (0, _chainedFunction2.default)(onTouchCancel, function (event) {
+                    if (disabled) {
+                        return;
+                    }
+                    release(event);
+                }),
+                onTouchEnd: (0, _chainedFunction2.default)(onTouchEnd, function (event) {
+                    if (disabled) {
+                        return;
+                    }
+                    release(event);
+                })
             }));
         }
     }]);
 
     return Repeatable;
 }(_react.PureComponent), _class.propTypes = {
+    // Set it to true to disable event actions.
+    disabled: _propTypes2.default.bool,
+
     // The time (in milliseconds) to wait before the first hold action is being triggered.
     repeatDelay: _propTypes2.default.oneOfType([_propTypes2.default.number, _propTypes2.default.string]),
 
@@ -30016,6 +30099,7 @@ var Repeatable = (_temp2 = _class = function (_PureComponent) {
     // Callback fired when the mouseup, touchcancel, or touchend event is triggered.
     onRelease: _propTypes2.default.func
 }, _class.defaultProps = {
+    disabled: false,
     repeatDelay: 500,
     repeatInterval: 32,
     repeatCount: 0
@@ -30639,7 +30723,7 @@ var App = function (_PureComponent) {
                                     {
                                         style: { display: 'inline-block', marginLeft: 8 },
                                         repeatDelay: Number(this.state.repeatDelay),
-                                        repeatInterval: Number(this.state.repeatInterval),
+                                        repeatInterval: Number(this.state.repeatInterval / 5),
                                         repeatCount: Number(this.state.repeatCount),
                                         onPress: function onPress() {
                                             console.log('[2] onPress');
@@ -30664,7 +30748,7 @@ var App = function (_PureComponent) {
                                                         pressed: true,
                                                         holding: true
                                                     },
-                                                    value: Math.min(state.value + 5, 100)
+                                                    value: Math.min(state.value + 1, 100)
                                                 };
                                             });
                                         },
@@ -30713,4 +30797,4 @@ _reactDom2.default.render(_react2.default.createElement(App, null), document.get
 /***/ })
 
 /******/ });
-//# sourceMappingURL=bundle.js.map?f0e503d902d5a2530239
+//# sourceMappingURL=bundle.js.map?45e747b5a2e1bdd1df1b
