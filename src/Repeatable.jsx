@@ -1,8 +1,12 @@
+import chainedFunction from 'chained-function';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
 class Repeatable extends PureComponent {
     static propTypes = {
+        // Set it to true to disable event actions.
+        disabled: PropTypes.bool,
+
         // The time (in milliseconds) to wait before the first hold action is being triggered.
         repeatDelay: PropTypes.oneOfType([
             PropTypes.number,
@@ -37,6 +41,7 @@ class Repeatable extends PureComponent {
         onRelease: PropTypes.func
     };
     static defaultProps = {
+        disabled: false,
         repeatDelay: 500,
         repeatInterval: 32,
         repeatCount: 0
@@ -99,6 +104,7 @@ class Repeatable extends PureComponent {
     }
     render() {
         const {
+            disabled,
             repeatDelay, // eslint-disable-line
             repeatInterval, // eslint-disable-line
             repeatCount, // eslint-disable-line
@@ -107,6 +113,10 @@ class Repeatable extends PureComponent {
             onHold, // eslint-disable-line
             onHoldEnd, // eslint-disable-line
             onRelease, // eslint-disable-line
+            onMouseDown,
+            onTouchStart,
+            onTouchCancel,
+            onTouchEnd,
             ...props
         } = this.props;
 
@@ -145,10 +155,42 @@ class Repeatable extends PureComponent {
             <div
                 role="presentation"
                 {...props}
-                onMouseDown={press}
-                onTouchStart={press}
-                onTouchCancel={release}
-                onTouchEnd={release}
+                onMouseDown={chainedFunction(
+                    onMouseDown,
+                    (event) => {
+                        if (disabled) {
+                            return;
+                        }
+                        press(event);
+                    }
+                )}
+                onTouchStart={chainedFunction(
+                    onTouchStart,
+                    (event) => {
+                        if (disabled) {
+                            return;
+                        }
+                        press(event);
+                    }
+                )}
+                onTouchCancel={chainedFunction(
+                    onTouchCancel,
+                    (event) => {
+                        if (disabled) {
+                            return;
+                        }
+                        release(event);
+                    }
+                )}
+                onTouchEnd={chainedFunction(
+                    onTouchEnd,
+                    (event) => {
+                        if (disabled) {
+                            return;
+                        }
+                        release(event);
+                    }
+                )}
             />
         );
     }
