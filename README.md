@@ -55,6 +55,7 @@ onPress -> onRelease
 
 Name | Type | Default | Description
 :--- | :--- | :------ | :----------
+componentClass | element | 'div' | A custom element for this component.
 disabled | Boolean | false | Set it to true to disable event actions.
 repeatDelay | Number | 500 | The time (in milliseconds) to wait before the first hold action is being triggered.
 repeatInterval | Number | 32 | The time interval (in milliseconds) on how often to trigger a hold action.

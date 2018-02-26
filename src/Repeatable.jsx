@@ -4,6 +4,12 @@ import React, { PureComponent } from 'react';
 
 class Repeatable extends PureComponent {
     static propTypes = {
+        // A custom element for this component.
+        componentClass: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.func
+        ]),
+
         // Set it to true to disable event actions.
         disabled: PropTypes.bool,
 
@@ -38,9 +44,15 @@ class Repeatable extends PureComponent {
         onHoldEnd: PropTypes.func,
 
         // Callback fired when the mouseup, touchcancel, or touchend event is triggered.
-        onRelease: PropTypes.func
+        onRelease: PropTypes.func,
+
+        onMouseDown: PropTypes.func,
+        onTouchStart: PropTypes.func,
+        onTouchCancel: PropTypes.func,
+        onTouchEnd: PropTypes.func
     };
     static defaultProps = {
+        componentClass: 'div',
         disabled: false,
         repeatDelay: 500,
         repeatInterval: 32,
@@ -104,6 +116,7 @@ class Repeatable extends PureComponent {
     }
     render() {
         const {
+            componentClass: Component,
             disabled,
             repeatDelay, // eslint-disable-line
             repeatInterval, // eslint-disable-line
@@ -152,7 +165,7 @@ class Repeatable extends PureComponent {
         };
 
         return (
-            <div
+            <Component
                 role="presentation"
                 {...props}
                 onMouseDown={chainedFunction(
