@@ -14,9 +14,8 @@ npm install --save react-repeatable
 
 ## Usage
 
-```js
+```jsx
 <Repeatable
-    style={{ display: 'inline-block' }}
     repeatDelay={500}
     repeatInterval={32}
     onPress{(event) => {
@@ -35,10 +34,24 @@ npm install --save react-repeatable
         // Callback fired when the mouseup, touchcancel, or touchend event is triggered.
     }}
 >
-    <button type="button">
-        Press Me
-    </button>
+    Press Me
 </Repeatable>
+```
+
+### Repeatable Button
+
+```jsx
+const RepeatableButton = ({ onClick, ...props }) => (
+    <Repeatable
+        tag="button"
+        type="button"
+        onHold={onClick}
+        onRelease={onClick}
+        {...props}
+    />
+);
+
+<RepeatableButton onClick={handleClick} />
 ```
 
 ## API
@@ -55,7 +68,7 @@ onPress -> onRelease
 
 Name | Type | Default | Description
 :--- | :--- | :------ | :----------
-componentClass | element | 'div' | A custom element for this component.
+tag | element | 'div' | A custom element for this component.
 disabled | Boolean | false | Set it to true to disable event actions.
 repeatDelay | Number | 500 | The time (in milliseconds) to wait before the first hold action is being triggered.
 repeatInterval | Number | 32 | The time interval (in milliseconds) on how often to trigger a hold action.
