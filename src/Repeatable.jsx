@@ -1,13 +1,19 @@
 import chainedFunction from 'chained-function';
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 
-class Repeatable extends PureComponent {
+class Repeatable extends React.Component {
     static propTypes = {
         // A custom element for this component.
-        componentClass: PropTypes.oneOfType([
+        tag: PropTypes.oneOfType([
+            PropTypes.func,
             PropTypes.string,
-            PropTypes.func
+            PropTypes.shape({ $$typeof: PropTypes.symbol, render: PropTypes.func }),
+            PropTypes.arrayOf(PropTypes.oneOfType([
+                PropTypes.func,
+                PropTypes.string,
+                PropTypes.shape({ $$typeof: PropTypes.symbol, render: PropTypes.func }),
+            ]))
         ]),
 
         // Set it to true to disable event actions.
@@ -51,8 +57,9 @@ class Repeatable extends PureComponent {
         onTouchCancel: PropTypes.func,
         onTouchEnd: PropTypes.func
     };
+
     static defaultProps = {
-        componentClass: 'div',
+        tag: 'div',
         disabled: false,
         repeatDelay: 500,
         repeatInterval: 32,
@@ -60,7 +67,9 @@ class Repeatable extends PureComponent {
     };
 
     repeatDelayTimer = null;
+
     repeatIntervalTimer = null;
+
     repeatAmount = 0;
 
     acquireTimer = () => {
@@ -110,14 +119,53 @@ class Repeatable extends PureComponent {
         }
     };
 
+    handleRelease = (event) => {
+        if (this.props.disabled) {
+            return;
+        }
+
+        if (this.repeatAmount > 0) {
+            if (typeof this.props.onHoldEnd === 'function') {
+                this.props.onHoldEnd();
+            }
+        }
+
+        this.repeatAmount = 0;
+        this.releaseTimer();
+
+        if (typeof this.props.onRelease === 'function') {
+            this.props.onRelease(event);
+        }
+    };
+
+    handlePress = (event) => {
+        if (this.props.disabled) {
+            return;
+        }
+
+        event.persist();
+
+        const releaseOnce = (event) => {
+            document.documentElement.removeEventListener('mouseup', releaseOnce);
+            this.handleRelease(event);
+        };
+        document.documentElement.addEventListener('mouseup', releaseOnce);
+
+        if (typeof this.props.onPress === 'function') {
+            this.props.onPress(event);
+        }
+
+        this.acquireTimer();
+    };
+
     componentWillUnmount() {
         this.repeatAmount = 0;
         this.releaseTimer();
     }
+
     render() {
         const {
-            componentClass: Component,
-            disabled,
+            tag: Tag,
             repeatDelay, // eslint-disable-line
             repeatInterval, // eslint-disable-line
             repeatCount, // eslint-disable-line
@@ -133,76 +181,25 @@ class Repeatable extends PureComponent {
             ...props
         } = this.props;
 
-        const release = (event) => {
-            if (this.repeatAmount > 0) {
-                if (typeof this.props.onHoldEnd === 'function') {
-                    this.props.onHoldEnd();
-                }
-            }
-
-            this.repeatAmount = 0;
-            this.releaseTimer();
-
-            if (typeof this.props.onRelease === 'function') {
-                this.props.onRelease(event);
-            }
-        };
-
-        const press = (event) => {
-            event.persist();
-
-            const releaseOnce = (event) => {
-                document.documentElement.removeEventListener('mouseup', releaseOnce);
-                release(event);
-            };
-            document.documentElement.addEventListener('mouseup', releaseOnce);
-
-            if (typeof this.props.onPress === 'function') {
-                this.props.onPress(event);
-            }
-
-            this.acquireTimer();
-        };
-
         return (
-            <Component
+            <Tag
                 role="presentation"
                 {...props}
                 onMouseDown={chainedFunction(
                     onMouseDown,
-                    (event) => {
-                        if (disabled) {
-                            return;
-                        }
-                        press(event);
-                    }
+                    this.handlePress,
                 )}
                 onTouchStart={chainedFunction(
                     onTouchStart,
-                    (event) => {
-                        if (disabled) {
-                            return;
-                        }
-                        press(event);
-                    }
+                    this.handlePress,
                 )}
                 onTouchCancel={chainedFunction(
                     onTouchCancel,
-                    (event) => {
-                        if (disabled) {
-                            return;
-                        }
-                        release(event);
-                    }
+                    this.handleRelease,
                 )}
                 onTouchEnd={chainedFunction(
                     onTouchEnd,
-                    (event) => {
-                        if (disabled) {
-                            return;
-                        }
-                        release(event);
-                    }
+                    this.handleRelease,
                 )}
             />
         );

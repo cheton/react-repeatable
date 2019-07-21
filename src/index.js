@@ -1,3 +1,3 @@
 import Repeatable from './Repeatable';
 
-module.exports = Repeatable;
+export default Repeatable;
