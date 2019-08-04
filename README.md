@@ -18,7 +18,7 @@ npm install --save react-repeatable
 <Repeatable
     repeatDelay={500}
     repeatInterval={32}
-    onPress{(event) => {
+    onPress={(event) => {
         // Callback fired when the mousedown or touchstart event is triggered.
     }}
     onHoldStart={() => {
