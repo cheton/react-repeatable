@@ -5,10 +5,12 @@ import { test } from 'tap';
 import '../setupTests';
 import Repeatable from '../src';
 
+global.window.navigator.userAgentData = { mobile: false };
+
 test('<Repeatable />', (t) => {
     const wrapper = mount((
         <Repeatable>
-            <button type="button"></button>
+            <button type="button" />
         </Repeatable>
     ));
     t.equal(wrapper.find(Repeatable).length, 1, 'should render <Repeatable /> component');

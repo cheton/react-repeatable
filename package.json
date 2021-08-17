@@ -1,6 +1,6 @@
 {
   "name": "react-repeatable",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A press and hold wrapper component that can trigger hold action multiple times while holding down.",
   "main": "lib/index.js",
   "files": [
